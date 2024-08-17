@@ -1,0 +1,79 @@
+
+##########################
+#                        #
+#        Petstore        #
+#        Service         #
+#                        #
+#                        #
+##########################
+
+# petstore namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: petstore
+  # labels:
+  #   # discovery.solo.io/function_discovery: enabled
+---
+# petstore service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: petstore
+  name: petstore
+  namespace: petstore
+spec:
+  selector:
+    matchLabels:
+      app: petstore
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: petstore
+    spec:
+      containers:
+      - image: soloio/petstore-example:latest
+        name: petstore
+        ports:
+        - containerPort: 8080
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: petstore
+  namespace: petstore
+  labels:
+    service: petstore
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+  selector:
+    app: petstore
+---
+#petstore ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: petstore-ingress
+  namespace: petstore
+  labels:
+    name: petstore-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: petstore
+            port: 
+              number: 8080
